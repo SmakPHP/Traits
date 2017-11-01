@@ -212,3 +212,4 @@ class soap_engine {
         return (!is_null($this->gate)) ? $this->gate->GetResult() : array();
     }
 }
+
