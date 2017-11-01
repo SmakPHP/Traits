@@ -16,3 +16,4 @@ function register($class) {
 
 // Регистрируем обработчик автоматического подключения классов
 spl_autoload_register('register');
+
