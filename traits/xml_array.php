@@ -268,3 +268,4 @@ class xml_array {
     }
 
 }
+
