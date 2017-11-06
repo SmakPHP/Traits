@@ -14,7 +14,7 @@ class tools {
      * @param $name
      * @return mixed
      */
-    public static function dirname($path, $name) {
+    public static function search($path, $name) {
         // Текущая директория
         $dir = dirname($path);
         // Если дошли до главной возвращаем просто главную
@@ -22,7 +22,30 @@ class tools {
         // Если дошли до заданной то возвращаем путь к ней
         else if (basename($dir) == $name) return $dir;
         // Иначе делеаем рекрсивный поиск
-        else return self::dirname($dir, $name);
+        else return self::search($dir, $name);
+    }
+
+    /**
+     * Удаление файлов из директории
+     * @param string $dir Путь к директории
+     * @param bool $recursion Удалять вложенные папки
+     */
+    public static function clear($dir, $recursion = true) {
+        // Открываем папку
+        foreach (scandir($dir) as $name) {
+            // Считаем количество папок
+            if ($name == '.' || $name == '..') continue;
+            // Путь к файлу
+            $path = $dir.'/'.$name;
+            // Если директория
+            if (is_dir($path) && $recursion) {
+                // Выполняем рекурсивную очистку
+                self::clear($path, true);
+                // Удаляем директорию
+                rmdir($path);
+            // Иначе если файл то удаляем
+            } else if (is_file($path)) unlink($path);
+        }
     }
 
     /**
@@ -78,7 +101,7 @@ class tools {
      * @param int $pos Позиция в наденном массиве
      * @return int
      */
-    public static function find_reg($reg, $data, &$find, $stop = false, $pos = 1) {
+    public static function find($reg, $data, &$find, $stop = false, $pos = 1) {
         // Инициализация
         $find = '';
         // Поиск регулярного выражения

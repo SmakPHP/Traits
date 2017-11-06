@@ -26,6 +26,24 @@ namespace traits;
 class get_page {
 
     /**
+     * Дополнительные заголовки
+     * @var array
+     */
+    public $extra = array();
+
+    /**
+     * Полученные заголовки
+     * @var string
+     */
+    public $header = '';
+
+    /**
+     * Полученные данные
+     * @var string
+     */
+    public $data = '';
+
+    /**
      * Отладка
      * @var string
      */
@@ -63,6 +81,12 @@ class get_page {
     private $redirect = 6;
 
     /**
+     * Разрешить редирект на любой хост
+     * @var bool
+     */
+    private $all = false;
+
+    /**
      * Подсчет редиректов
      * @var int
      */
@@ -81,33 +105,31 @@ class get_page {
     private $agent = '';
 
     /**
-     * Дополнительные заголовки
-     * @var array
-     */
-    private $extra = array();
-
-    /**
-     * Заголовки
+     * Ссылающаюся страница
      * @var string
      */
-    private $header = '';
+    private $referer = '';
 
     /**
-     * Данные
+     * Директория вывода
      * @var string
      */
-    private $data = '';
+    private static $path = null;
 
     /**
      * Конструктор класса
+     * @param string $path Директория вывода
      * @param array $proxy Прокси
      * @param int $redirect Максимальное количество редиректов
+     * @param bool $all Флаг разрешающий переадресацию на любой хост
      * @param int $timeout Максимальное время ожидания данных
-     * @param string $debug Путь к файлу для отладки
+     * @param bool $debug Флаг отладки
+     * @throws \Exception
      */
-    public function __construct($proxy = array(), $redirect = 6, $timeout = 30, $debug = '') {
+    public function __construct($path = '', $proxy = array(), $redirect = 6,
+                                $all = false, $timeout = 30, $debug = false) {
         // Валидация прокси
-        if (isset($proxy['type']) && in_array($this->types, $proxy['type']) &&
+        if (isset($proxy['type']) && in_array($proxy['type'], $this->types) &&
             isset($proxy['host']) && preg_match($this->filter, $proxy['host'])) $this->proxy = $proxy;
         // Иначе просто сбрасываем
         else $this->proxy = array();
@@ -115,11 +137,22 @@ class get_page {
         $this->redirect = intval($redirect);
         // Установка максимального времени ожидания
         $this->timeout = intval($timeout);
+        // Установка режима переадресации
+        $this->all = ($all) ? true : false;
         // Установка браузера
         $this->agent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '.
                        'Chrome/62.0.3202.62 Safari/537.36';
-        // Если установлен путь к файлу для отладки
-        if (strlen($this->debug) && is_writable($this->debug)) $this->debug = $debug;
+        // Установка директории вывода
+        self::$path = is_dir($path) ? realpath($path) : null;
+        // Если установлен флаг отладки
+        if ($debug) {
+            // Если установлена директория для вывода
+            if (!is_null(self::$path)) {
+                // Устанавливаем путь у файлу отладки заголовков
+                $this->debug = self::$path.'/debug.header.log';
+            // Иначе выбрасываеем исключение
+            } else throw new \Exception('Не уcтановлена директория для вывода');
+        }
     }
 
     /**
@@ -128,11 +161,14 @@ class get_page {
      * @param array $post Отправляемые данные
      * @param string $referer Рефер
      * @param string $cookie Куки
+     * @param int $cleaning Флаг очистки кук
      * @param int $start Получить данные с позиции
      * @param int $length Длинной
      * @return bool|string
+     * @throws \Exception
      */
-    public function get($link, $post = array(), $referer = '', $cookie = '', $start = -1, $length = 2000000) {
+    public function get($link, $post = array(), $referer = '', $cookie = 'auto',
+                        $cleaning = 8, $start = -1, $length = 2000000) {
         // Инициализация
         $this->header = $this->data = '';
         // Устанавливаем максимальный размер данных
@@ -147,8 +183,15 @@ class get_page {
         curl_setopt($curl, CURLOPT_URL, $link);
         // Установка браузера
         curl_setopt($curl, CURLOPT_USERAGENT, $this->agent);
-        // Если не установлена ссылающася страница
-        if ($referer == '') $referer = $parse['scheme'].'://'.$parse['host'].'/';
+        // Если не установлена ссылающаяся страница
+        if ($referer == '') {
+            // Если была установлена до этого берем её
+            if (strlen($this->referer)) $referer = $this->referer;
+            // Иначе генерируем из текущей ссылки
+            else $referer = $parse['scheme'].'://'.$parse['host'].'/';
+        }
+        // Устанавливаем ссылающуюся страницу
+        $this->referer = $link;
         // Устанавливаем ссылающуюся страницу
         curl_setopt($curl, CURLOPT_REFERER, $referer);
         // Если установлены дополнительные заголовки
@@ -187,11 +230,17 @@ class get_page {
         }
         // Если установлены куки
         if (strlen($cookie)) {
-            // Создаем файл с кукаами если не существует
-            if (!file_exists($cookie)) file_put_contents($cookie, '');
-            // Подключаем поддержку кук
-            curl_setopt($curl, CURLOPT_COOKIEFILE, $cookie);
-            curl_setopt($curl, CURLOPT_COOKIEJAR, $cookie);
+            // Если автоматическая генерация имени
+            $file = ($cookie == 'auto') ? 'cookie.'.$parse['host'].'.txt' : $cookie;
+            // Если установлена директория для вывода
+            if (!is_null(self::$path)) {
+                // Очистка кук при необходимости
+                file_put_contents(self::$path.'/'.$file, '', $cleaning);
+                // Подключаем поддержку кук
+                curl_setopt($curl, CURLOPT_COOKIEFILE, self::$path.'/'.$file);
+                curl_setopt($curl, CURLOPT_COOKIEJAR, self::$path.'/'.$file);
+            // Вывод исключения если не установлена директория для вывода
+            } else throw new \Exception('Не уcтановлена директория для вывода');
         }
         // Если отладка
         if (strlen($this->debug)) {
@@ -207,33 +256,34 @@ class get_page {
         // Если файл отладки открыт
         if (is_resource($sniff)) fclose($sniff);
         // Пока в полученных данных находим служебный заголовок
-        while (stripos($this->data, 'HTTP/1.') === 0) {
+        while (stripos($this->data, 'HTTP/1') === 0) {
             // Разбиваем на заголовок и данные
             list($header, $this->data) = explode("\r\n\r\n", $this->data, 2);
             // Собираем заголовок
-            $this->header .= $header;
+            $this->header = ltrim($this->header."\r\n".$header);
         }
         // Если данные упакованы
-        if (tools::find_reg('|Content-Encoding: (\\w+)|i', $this->header, $find) && ($start == -1)) {
+        if (tools::find('|Content-Encoding: (\\w+)|i', $this->header, $find) && ($start == -1)) {
             // Распаковка данных из gz формата
             if ($find == 'gzip') $this->data = gzinflate(substr($this->data, 10, -8));
             // Распаковка данных из deflate формата
             else if ($find == 'deflate') $this->data = gzinflate($this->data);
         }
         // Если установленна переадресация
-        if (tools::find_reg('|^Location: (.+)|im', $this->header, $location) && ($this->counter > $this->redirect)) {
+        if (tools::find('|^Location: (.+)|im', $this->header, $location) && ($this->counter <= $this->redirect)) {
             // Если указание полного пути
             if ((strpos($location, 'http://') === 0) || (strpos($location, 'https://') === 0)) {
                 // Получаем хост ссылки и парсим на поддомены
                 $host = parse_url($location, PHP_URL_HOST); $explode = explode('.', $host);
                 // Переварачиваем массив и получаем главный хост
                 $reverse = array_reverse($explode); $host = $reverse[1].'.'.$reverse[0];
-                // Разрешаем переадресацию только если хосты схожы
-                if ((strpos($host, $parse['host']) !== false) || (strpos($parse['host'], $host) !== false)) {
+                // Разрешаем переадресацию только если хосты схожы или разрешена переадресация на все
+                if (((strpos($host, $parse['host']) !== false) ||
+                     (strpos($parse['host'], $host) !== false)) || $this->all) {
                     // Вывод в лог если отладка
                     if (strlen($this->debug)) show::alert('Переадресация (1) - '.$location.', '.$this->counter);
                     // Рекурсивное чтение страницы
-                    $this->data = $this->get($location, array(), $link, $cookie, $start, $length);
+                    $this->data = $this->get($location, array(), '', $cookie, 8, $start, $length);
                     // Иначе - выводим ошибку
                 } else show::alert('В переадресации отказано - '.$location.', хост: '.$parse['host']);
             // Если начинается на слеш
@@ -243,7 +293,7 @@ class get_page {
                 // Вывод в лог если отладка
                 if (strlen($this->debug)) show::alert('Переадресация (2) - '.$location.', '.$this->counter);
                 // Рекурсивное чтение страницы
-                $this->data = $this->get($location, array(), $link, $cookie, $start, $length);
+                $this->data = $this->get($location, array(), '', $cookie, 8, $start, $length);
             // Если начинается на букву
             } else if (preg_match('#^\w+#', $location)) {
                 // Добавляем протокол и хост
@@ -251,7 +301,7 @@ class get_page {
                 // Вывод в лог если отладка
                 if (strlen($this->debug)) show::alert('Переадресация (3) - '.$location.', '.$this->counter);
                 // Рекурсивное чтение страницы
-                $this->data = $this->get($location, array(), $link, $cookie, $start, $length);
+                $this->data = $this->get($location, array(), '', $cookie, 8, $start, $length);
             // Иначе - выводим ошибку
             } else show::alert('Не возможно переадресовать - '.$location);
         }
