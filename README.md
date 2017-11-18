@@ -11,14 +11,14 @@
     // Подключение библиотеки
     require_once 'traits/register.php';
     
-    1. Чтение страницы
+    // Чтение страницы
     $proxy = array('type' => 'http', 'host' => '127.0.0.1:8888');
     // Инициализация класса загрузки страниц
     $pager = new traits\get_page(data_dir, $proxy);
     // Запрашиваем страницу
     $data = $pager->get('http://php.net');
     
-    2. Сборка XML документа
+    // Сборка XML документа
     $xml = traits\array_xml::extent('inf')->build(array('key' => 'value'));
     
 Больше примеров в example.php
