@@ -26,12 +26,27 @@ class show {
     private static $path = null;
 
     /**
+     * Выполняемая процедура перед остановкой
+     * @var null
+     */
+    private static $before = null;
+
+    /**
      * Конструктор класса
      * @param string $path Директория вывода
      */
     public function __construct($path) {
         // Установка директории вывода
         self::$path = is_dir($path) ? realpath($path) : null;
+    }
+
+    /**
+     * Установка процедуры перед остановкой
+     * @param $before
+     */
+    public static function completion($before) {
+        // Установка выполняемой проедуры
+        self::$before = is_callable($before, true) ? $before : null;
     }
 
     /**
@@ -50,15 +65,20 @@ class show {
             // Если установлены данные
             if (strlen($data)) {
                 // Генерируем название файла для данных
-                $file = "debug.".date("Y-m-d_H-i-s").".log";
+                $file = "debug.".date("Y-m-d_H-i-s").'.'.tools::random(7, '0123456789').".log";
                 // Записываем данные в файл
                 file_put_contents(self::$path.'/'.$file, $data);
                 // Сохранение сообщение в лог
                 self::alert("Данные, см.: ".$file, $stop);
             }
         }
-        // Прерываем выполнение если установлен флаг
-        if ($stop) die();
+        // Если установлен флаг остаановки
+        if ($stop) {
+            // Если установлена процедура то выполняем
+            if (!is_null(self::$before)) call_user_func(self::$before);
+            // Прерывваем выполнение
+            die();
+        }
     }
 
 }

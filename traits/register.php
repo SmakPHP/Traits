@@ -17,17 +17,20 @@ function register($class) {
 // Регистрируем обработчик автоматического подключения классов
 spl_autoload_register('register');
 
-// Директория для вывода
-define('data_dir', dirname(__DIR__).'/data/');
+// Устанавливаем главную директорию
+if (!defined('root')) define('root', dirname(__DIR__));
+// Устанавливааем директорию для вывода
+if (!defined('data')) define('data', root.'/data');
+
 // Проверяем наличие директории для вывода
-if (!file_exists(data_dir)) {
+if (!file_exists(data)) {
     // Пробуем создать директорию
-    if (mkdir(data_dir, true)) {
+    if (mkdir(data, true)) {
         // Устанавливаем полный доступ
-        chmod(data_dir, 0777);
+        chmod(data, 0777);
     // Вывод исключения если не удалось создать директорию
-    } else throw new \Exception('Не удалось создать директорию: '.data_dir);
+    } else throw new \Exception('Не удалось создать директорию: '.data);
 }
 
 // Инициализация класса вывода
-$show = new traits\show(data_dir);
+$show = new traits\show(data);

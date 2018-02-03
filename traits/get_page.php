@@ -231,7 +231,7 @@ class get_page {
         // Если установлены куки
         if (strlen($cookie)) {
             // Если автоматическая генерация имени
-            $file = ($cookie == 'auto') ? 'cookie.'.$parse['host'].'.txt' : $cookie;
+            $file = ($cookie == 'auto') ? 'cookie.'.tools::domain($parse['host']).'.txt' : $cookie;
             // Если установлена директория для вывода
             if (!is_null(self::$path)) {
                 // Очистка кук при необходимости
@@ -273,10 +273,8 @@ class get_page {
         if (tools::find('|^Location: (.+)|im', $this->header, $location) && ($this->counter <= $this->redirect)) {
             // Если указание полного пути
             if ((strpos($location, 'http://') === 0) || (strpos($location, 'https://') === 0)) {
-                // Получаем хост ссылки и парсим на поддомены
-                $host = parse_url($location, PHP_URL_HOST); $explode = explode('.', $host);
-                // Переварачиваем массив и получаем главный хост
-                $reverse = array_reverse($explode); $host = $reverse[1].'.'.$reverse[0];
+                // Получаем главный хост
+                $host = tools::domain(parse_url($location, PHP_URL_HOST));
                 // Разрешаем переадресацию только если хосты схожы или разрешена переадресация на все
                 if (((strpos($host, $parse['host']) !== false) ||
                      (strpos($parse['host'], $host) !== false)) || $this->all) {
