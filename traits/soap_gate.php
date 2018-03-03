@@ -9,18 +9,18 @@ namespace traits;
  */
 class soap_gate {
 
-    /**
-     * Сохранение результата
-     * @var array
-     */
-    protected $result = array();
+	/**
+	 * Сохранение результата
+	 * @var array
+	 */
+	protected $result = array();
 
-    /**
-     * Вывод результата
-     * @return array
-     */
-    public function GetResult() {
-        return $this->result;
-    }
+	/**
+	 * Вывод результата
+	 * @return array
+	 */
+	public function GetResult() {
+		return $this->result;
+	}
 
 }

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>MySQL Error!</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <style type="text/css">
+    body {
+      font-family: Verdana, Arial, Helvetica, sans-serif;
+      font-size: 11px;
+      font-style: normal;
+      color: #000000;
+    }
+    .top {
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: bold;
+      padding-left: 20px;
+      padding-top: 10px;
+      padding-bottom: 10px;
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.75);
+      background-color: #ab2b2d;
+      background-image: -moz-linear-gradient(top, #cc3c3f, #982628);
+      background-image: -ms-linear-gradient(top, #cc3c3f, #982628);
+      background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#cc3c3f), to(#982628));
+      background-image: -webkit-linear-gradient(top, #cc3c3f, #982628);
+      background-image: -o-linear-gradient(top, #cc3c3f, #982628);
+      background-image: linear-gradient(top, #cc3c3f, #982628);
+      filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#cc3c3f', endColorstr='#982628',GradientType=0 );
+      background-repeat: repeat-x;
+      border-bottom: 1px solid #ffffff;
+    }
+    .box {
+      margin: 10px;
+      padding: 4px;
+      background-color: #efeded;
+      border: 1px solid #dedcdc;
+    }
+    .center {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      -webkit-transform: translate(-50%, -50%);
+      transform: translate(-50%, -50%);
+    }
+  </style>
+</head>
+<body>
+  <div class="center">
+    <div style="width: 700px;
+                margin: 20px;
+                border: 1px solid #d9d9d9;
+                background-color: #f1efef;
+                -moz-border-radius: 5px;
+                -webkit-border-radius: 5px;
+                border-radius: 5px;
+                -moz-box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.3);
+                -webkit-box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.3);
+                box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.3);" >
+      <div class="top">MySQL Error!</div>
+      <div class="box"><b>MySQL error</b> in file: <b>{file}</b> at line <b>{line}</b></div>
+      <div class="box">Error Number: <b>{num}</b></div>
+      <div class="box">The Error returned was:<br /> <b>{error}</b></div>
+      <div class="box" style="padding:5px 10px 0 5px;"><b>SQL query:</b><br />
+        <textarea style="margin:5px 0 5px 0;min-height:100px;width:100%;resize:vertical;">{query}</textarea>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
