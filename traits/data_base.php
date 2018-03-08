@@ -14,9 +14,6 @@ namespace traits;
 	// Подключение библиотеки
 	require_once 'traits/register.php';
 
-	// Инициализация класса вывода
-	$show = new traits\show(__DIR__);
-
 	// Инициализация класса загрузки страниц
 	$db = new traits\data_base('test', 'password');
 	// Выполняем запрос
@@ -61,7 +58,7 @@ class data_base extends \mysqli {
 	 * @param $database
 	 * @param string $port
 	 */
-	public function __construct($username, $password, $database = '', $hostname = '127.0.0.1', $port = '3306') {
+	public function __construct($username, $password, $database = '', $hostname = 'localhost', $port = '3306') {
 		// Если не установлена база данных, берем из логина
 		if ($database == '') $database = $username;
 		// Подключение к базе данных
@@ -91,10 +88,10 @@ class data_base extends \mysqli {
 		$this->time_query += ($time_query = $this->get_time() - $before);
 		// Количество запросов
 		$this->query_num++;
-		// Инициализация
-		$time_taken = 0; $result = true;
 		// Если запрос успешно выполнился
 		if (!$this->errno) {
+			// Инициализация времени выполнения и результата
+			$time_taken = 0; $result = new \stdClass();
 			// Если есть результат
 			if ($query instanceof \mysqli_result) {
 				// Засекаем время на получение данных
@@ -109,7 +106,6 @@ class data_base extends \mysqli {
 					if (!$multi) break;
 				}
 				// Установка данных в стандартный класс
-				$result = new \stdClass();
 				$result->num_rows = $query->num_rows;
 				$result->row = isset($data[0]) ? $data[0] : array();
 				$result->rows = $data;
@@ -118,6 +114,11 @@ class data_base extends \mysqli {
 				$query->free_result();
 				// Подсчитываем время получения данных
 				$this->time_taken += ($time_taken = $this->get_time() - $before);
+			// Иначе нулевые значения
+			} else {
+				// Установка нулевых значений
+				$result->num_rows = 0;
+				$result->row = $result->rows = array();
 			}
 			// История запросов
 			$this->query_list[] = array(

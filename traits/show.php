@@ -81,4 +81,49 @@ class show {
 		}
 	}
 
+	/**
+	 * Генерация постраничной навигации
+	 * @param int $count Всего страниц
+	 * @param int $select Номер активной страницы
+	 * @return array
+	 */
+	public static function paginator($count, $select) {
+		// Инициализация
+		$result = array();
+		// Если страниц 0 или 1, вернем пустой массив (переключатели не выводятся)
+		if ($count == 0 || $count == 1) return $result;
+		// Если страниц больше 10, заполним массив переключателями в зависимости от активной страницы
+		if ($count > 10) {
+			// Если активная страница - одна из первых или одна из последних страниц
+			if ($select <= 4 || $select + 3 >= $count) {
+				for($i = 0; $i <= 4; $i++) {
+					$result[$i] = $i + 1;
+				}
+				$result[5] = "...";
+				for($j = 6, $k = 4; $j <= 10; $j++, $k--) {
+					$result[$j] = $count - $k;
+				}
+				// В противном случае в массив запишем первые и последние две страницы
+			} else {
+				$result[0] = 1;
+				$result[1] = 2;
+				$result[2] = "...";
+				$result[3] = $select - 2;
+				$result[4] = $select - 1;
+				$result[5] = $select;
+				$result[6] = $select + 1;
+				$result[7] = $select + 2;
+				$result[8] = "...";
+				$result[9] = $count - 1;
+				$result[10] = $count;
+			}
+			// Если страниц меньше 10, заполним массив переключателей всеми страницами
+		} else {
+			for($n = 0; $n < $count; $n++) {
+				$result[$n] = $n + 1;
+			}
+		}
+		return $result;
+	}
+
 }
