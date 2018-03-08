@@ -22,8 +22,7 @@ class mails {
 	 * @param string $email От кого
 	 * @return bool
 	 */
-	public function send_smtp($to, $title, $message, $user, $password,
-														$file = '', $email = "admin@freevds.ru") {
+	public function send_smtp($to, $title, $message, $user, $password, $file = '', $email = "admin@freevds.ru") {
 		// Инициализируем класс для отправки письма
 		$mail = new mailer;
 		// Для отладки
@@ -5192,4 +5191,3 @@ class mailer {
         }
     }
 }
-
