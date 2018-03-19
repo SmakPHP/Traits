@@ -4,7 +4,7 @@
 namespace traits;
 
 /**
- * Класс для чтения страницы
+ * Класс для работы с базой данных
  *
  * Дополнительно:
  * http://php.net/manual/ru/book.mysqli.php
@@ -14,7 +14,7 @@ namespace traits;
 	// Подключение библиотеки
 	require_once 'traits/register.php';
 
-	// Инициализация класса загрузки страниц
+	// Инициализация класса взаимодействия с базой данных
 	$db = new traits\data_base('test', 'password');
 	// Выполняем запрос
 	$data = $db->query('SELECT * FROM table');

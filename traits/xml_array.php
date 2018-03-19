@@ -249,9 +249,8 @@ class xml_array {
 				if (isset($children['tagData']) && $children['name'] == $name) {
 					// Получаем значение
 					$result = $children['tagData'];
-				}
 				// Если есть вложенный элемент
-				if (isset($children['children'])) {
+				} elseif (isset($children['children'])) {
 					// Выполняем рекурсивный поиск
 					$result = $this->find_tag($name, $children['children']);
 				}

@@ -32,12 +32,20 @@ class show {
 	private static $before = null;
 
 	/**
+	 * Запуск из командной строки
+	 * @var bool
+	 */
+	private static $shell = false;
+
+	/**
 	 * Конструктор класса
 	 * @param string $path Директория вывода
 	 */
 	public function __construct($path) {
 		// Установка директории вывода
 		self::$path = is_dir($path) ? realpath($path) : null;
+		// Установка флага запуска из командной строки
+		self::$shell = isset($_SERVER['SHELL']);
 	}
 
 	/**
@@ -56,8 +64,10 @@ class show {
 	 * @param string $data Дополнительные данные
 	 */
 	public static function alert($message, $stop = false, $data = '') {
-		// Выводим сообщение
-		echo '<pre>'.htmlspecialchars($message).'</pre>';
+		// Если запуск из командной строки то выводим как есть
+		if (self::$shell) echo $message."\r\n";
+		// Иначе выводим сообщение в виде html строки
+		else echo '<pre>'.htmlspecialchars($message).'</pre>';
 		// Если установлена директория для логирования
 		if (!is_null(self::$path)) {
 			// Записываем данные в лог файл

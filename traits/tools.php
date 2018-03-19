@@ -76,4 +76,13 @@ class tools {
 		return implode('.', array_slice(explode('.', $sub), -2, 2));
 	}
 
+	/**
+	 * Проверка кодировки
+	 * @param string $string Текст для проверки
+	 * @return bool
+	 */
+	public static	function is_utf8($string) {
+		return (bool)preg_match('//u', $string);
+	}
+
 }
