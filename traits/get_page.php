@@ -169,144 +169,151 @@ class get_page {
 	 */
 	public function get($link, $post = array(), $referer = '', $cookie = 'auto',
 											$cleaning = 8, $start = -1, $length = 2000000) {
-			// Инициализация
-			$this->header = $this->data = '';
-			// Устанавливаем максимальный размер данных
-			$this->length = intval($length);
-			// Подсчитываем количество редиректов
-			$this->counter++;
-			// Парсим исходную ссылку
-			$parse = parse_url($link);
-			// Инициализация библиотеки
-			$curl = curl_init();
-			// Установка запращиваемой страницы
-			curl_setopt($curl, CURLOPT_URL, $link);
-			// Установка браузера
-			curl_setopt($curl, CURLOPT_USERAGENT, $this->agent);
-			// Если не установлена ссылающаяся страница
-			if ($referer == '') {
-				// Если была установлена до этого берем её
-				if (strlen($this->referer)) $referer = $this->referer;
-				// Иначе генерируем из текущей ссылки
-				else $referer = $parse['scheme'].'://'.$parse['host'].'/';
+		// Инициализация
+		$this->header = $this->data = '';
+		// Устанавливаем максимальный размер данных
+		$this->length = intval($length);
+		// Подсчитываем количество редиректов
+		$this->counter++;
+		// Парсим исходную ссылку
+		$parse = parse_url($link);
+		// Инициализация библиотеки
+		$curl = curl_init();
+		// Установка запращиваемой страницы
+		curl_setopt($curl, CURLOPT_URL, $link);
+		// Установка браузера
+		curl_setopt($curl, CURLOPT_USERAGENT, $this->agent);
+		// Если не установлена ссылающаяся страница
+		if ($referer == '') {
+			// Если была установлена до этого берем её
+			if (strlen($this->referer)) $referer = $this->referer;
+			// Иначе генерируем из текущей ссылки
+			else $referer = $parse['scheme'].'://'.$parse['host'].'/';
+		}
+		// Устанавливаем ссылающуюся страницу
+		$this->referer = $link;
+		// Устанавливаем ссылающуюся страницу
+		curl_setopt($curl, CURLOPT_REFERER, $referer);
+		// Если установлены дополнительные заголовки
+		if (count($this->extra)) $headers = $this->extra; else $headers = array();
+		// Если установлено начало получаемой части
+		if ($start >= 0) $headers[] = 'Range: bytes='.$start.'-';
+		// Устанавливаем заголовки браузера
+		if (count($headers)) curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+		// Для чтения страниц по защищенному протоколу
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+		// Возвращаем результат
+		curl_setopt($curl, CURLOPT_HEADER, true);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		// Установка максимального времени получения данных
+		curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
+		// Установка времени соединения
+		curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, $this->timeout);
+		// Если использовать прокси
+		if (isset($this->proxy['type'])) {
+			// Выбор типа прокси
+			if ($this->proxy['type'] == 'sock5') {
+				// Устанавливаем тип прокси
+				curl_setopt($curl, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5);
 			}
-			// Устанавливаем ссылающуюся страницу
-			$this->referer = $link;
-			// Устанавливаем ссылающуюся страницу
-			curl_setopt($curl, CURLOPT_REFERER, $referer);
-			// Если установлены дополнительные заголовки
-			if (count($this->extra)) $headers = $this->extra; else $headers = array();
-			// Если установлено начало получаемой части
-			if ($start >= 0) $headers[] = 'Range: bytes='.$start.'-';
-			// Устанавливаем заголовки браузера
-			if (count($headers)) curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-			// Для чтения страниц по защищенному протоколу
-			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-			// Возвращаем результат
-			curl_setopt($curl, CURLOPT_HEADER, true);
-			curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-			// Установка максимального времени получения данных
-			curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-			// Установка времени соединения
-			curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, $this->timeout);
-			// Если использовать прокси
-			if (isset($this->proxy['type'])) {
-				// Выбор типа прокси
-				if ($this->proxy['type'] == 'sock5') {
-					// Устанавливаем тип прокси
-					curl_setopt($curl, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5);
-				}
-				// Установка хоста прокси
-				curl_setopt($curl, CURLOPT_PROXY, $this->proxy['host']);
-			}
-			// Ограничиваем размер загрузки
-			curl_setopt($curl, CURLOPT_WRITEFUNCTION, array($this, 'process'));
-			// Если отправка данных
-			if (count($post)) {
-				// Устанавливаем отправляемые данные
-				curl_setopt($curl, CURLOPT_POST, true);
-				curl_setopt($curl, CURLOPT_POSTFIELDS, $post);
-			}
-			// Если установлены куки
-			if (strlen($cookie)) {
-				// Если автоматическая генерация имени
-				$file = ($cookie == 'auto') ? 'cookie.'.tools::domain($parse['host']).'.txt' : $cookie;
-				// Если установлена директория для вывода
-				if (!is_null(self::$path)) {
-					// Очистка кук при необходимости
-					file_put_contents(self::$path.'/'.$file, '', $cleaning);
-					// Подключаем поддержку кук
-					curl_setopt($curl, CURLOPT_COOKIEFILE, self::$path.'/'.$file);
-					curl_setopt($curl, CURLOPT_COOKIEJAR, self::$path.'/'.$file);
-				// Вывод исключения если не установлена директория для вывода
-				} else throw new \Exception('Не уcтановлена директория для вывода');
-			}
-			// Если отладка
-			if (strlen($this->debug)) {
-				// Устанавливаем файл для записи заголовов
-				$sniff = fopen($this->debug, 'a');
-				fwrite($sniff, date('Y-m-d H:i:s')." - Header:\r\n");
-				curl_setopt($curl, CURLOPT_STDERR, $sniff);
-				curl_setopt($curl, CURLOPT_VERBOSE, 1);
-			// Иначе файл отладки не открыт
-			} else $sniff = false;
-			// Выполняем чтение страницы с установленными параметрами
-			curl_exec($curl); curl_close($curl);
-			// Если файл отладки открыт
-			if (is_resource($sniff)) fclose($sniff);
-			// Пока в полученных данных находим служебный заголовок
-			while (stripos($this->data, 'HTTP/1') === 0) {
-				// Разбиваем на заголовок и данные
-				list($header, $this->data) = explode("\r\n\r\n", $this->data, 2);
-				// Собираем заголовок
-				$this->header = ltrim($this->header."\r\n".$header);
-			}
-			// Если данные упакованы
-			if (tools::find('|Content-Encoding: (\\w+)|i', $this->header, $find) && ($start == -1)) {
-				// Распаковка данных из gz формата
-				if ($find == 'gzip') $this->data = gzinflate(substr($this->data, 10, -8));
-				// Распаковка данных из deflate формата
-				else if ($find == 'deflate') $this->data = gzinflate($this->data);
-			}
-			// Если установленна переадресация
-			if (tools::find('|^Location: (.+)|im', $this->header, $location) && ($this->counter <= $this->redirect)) {
-				// Если указание полного пути
-				if ((strpos($location, 'http://') === 0) || (strpos($location, 'https://') === 0)) {
-					// Получаем главный хост
-					$host = tools::domain(parse_url($location, PHP_URL_HOST));
-					// Разрешаем переадресацию только если хосты схожы или разрешена переадресация на все
-					if (((strpos($host, $parse['host']) !== false) ||
-						 (strpos($parse['host'], $host) !== false)) || $this->all) {
-						// Вывод в лог если отладка
-						if (strlen($this->debug)) show::alert('Переадресация (1) - '.$location.', '.$this->counter);
-						// Рекурсивное чтение страницы
-						$this->data = $this->get($location, array(), '', $cookie, 8, $start, $length);
-					// Иначе - выводим ошибку
-					} else show::alert('В переадресации отказано - '.$location.', хост: '.$parse['host']);
-				// Если начинается на слеш
-				} else if ($location[0] == '/') {
-					// Добавляем протокол и хост
-					$location = $parse['scheme'].'://'.$parse['host'].$location;
+			// Установка хоста прокси
+			curl_setopt($curl, CURLOPT_PROXY, $this->proxy['host']);
+		}
+		// Ограничиваем размер загрузки
+		curl_setopt($curl, CURLOPT_WRITEFUNCTION, array($this, 'process'));
+		// Если отправка данных
+		if (count($post)) {
+			// Устанавливаем отправляемые данные
+			curl_setopt($curl, CURLOPT_POST, true);
+			curl_setopt($curl, CURLOPT_POSTFIELDS, $post);
+		}
+		// Если установлены куки
+		if (strlen($cookie)) {
+			// Если автоматическая генерация имени
+			$file = ($cookie == 'auto') ? 'cookie.'.tools::domain($parse['host']).'.txt' : $cookie;
+			// Если установлена директория для вывода
+			if (!is_null(self::$path)) {
+				// Очистка кук при необходимости
+				file_put_contents(self::$path.'/'.$file, '', $cleaning);
+				// Подключаем поддержку кук
+				curl_setopt($curl, CURLOPT_COOKIEFILE, self::$path.'/'.$file);
+				curl_setopt($curl, CURLOPT_COOKIEJAR, self::$path.'/'.$file);
+			// Вывод исключения если не установлена директория для вывода
+			} else throw new \Exception('Не уcтановлена директория для вывода');
+		}
+		// Если отладка
+		if (strlen($this->debug)) {
+			// Устанавливаем файл для записи заголовов
+			$sniff = fopen($this->debug, 'a');
+			fwrite($sniff, date('Y-m-d H:i:s')." - Header:\r\n");
+			curl_setopt($curl, CURLOPT_STDERR, $sniff);
+			curl_setopt($curl, CURLOPT_VERBOSE, 1);
+		// Иначе файл отладки не открыт
+		} else $sniff = false;
+		// Выполняем чтение страницы с установленными параметрами
+		curl_exec($curl);
+		// Проверяем наличие ошибки
+		if (curl_errno($curl)) {
+			// Выводим ошибку
+			show::alert('Ошибка: '.curl_error($curl).', при чтении страницы: '.$link);
+		}
+		// Закрываем соединение
+		curl_close($curl);
+		// Если файл отладки открыт
+		if (is_resource($sniff)) fclose($sniff);
+		// Пока в полученных данных находим служебный заголовок
+		while (stripos($this->data, 'HTTP/1') === 0) {
+			// Разбиваем на заголовок и данные
+			list($header, $this->data) = explode("\r\n\r\n", $this->data, 2);
+			// Собираем заголовок
+			$this->header = ltrim($this->header."\r\n".$header);
+		}
+		// Если данные упакованы
+		if (tools::find('|Content-Encoding: (\\w+)|i', $this->header, $find) && ($start == -1)) {
+			// Распаковка данных из gz формата
+			if ($find == 'gzip') $this->data = gzinflate(substr($this->data, 10, -8));
+			// Распаковка данных из deflate формата
+			else if ($find == 'deflate') $this->data = gzinflate($this->data);
+		}
+		// Если установленна переадресация
+		if (tools::find('|^Location: (.+)|im', $this->header, $location) && ($this->counter <= $this->redirect)) {
+			// Если указание полного пути
+			if ((strpos($location, 'http://') === 0) || (strpos($location, 'https://') === 0)) {
+				// Получаем главный хост
+				$host = tools::domain(parse_url($location, PHP_URL_HOST));
+				// Разрешаем переадресацию только если хосты схожы или разрешена переадресация на все
+				if (((strpos($host, $parse['host']) !== false) ||
+					 (strpos($parse['host'], $host) !== false)) || $this->all) {
 					// Вывод в лог если отладка
-					if (strlen($this->debug)) show::alert('Переадресация (2) - '.$location.', '.$this->counter);
-					// Рекурсивное чтение страницы
-					$this->data = $this->get($location, array(), '', $cookie, 8, $start, $length);
-				// Если начинается на букву
-				} else if (preg_match('#^\w+#', $location)) {
-					// Добавляем протокол и хост
-					$location = $parse['scheme'].'://'.$parse['host'].'/'.$location;
-					// Вывод в лог если отладка
-					if (strlen($this->debug)) show::alert('Переадресация (3) - '.$location.', '.$this->counter);
+					if (strlen($this->debug)) show::alert('Переадресация (1) - '.$location.', '.$this->counter);
 					// Рекурсивное чтение страницы
 					$this->data = $this->get($location, array(), '', $cookie, 8, $start, $length);
 				// Иначе - выводим ошибку
-				} else show::alert('Не возможно переадресовать - '.$location);
-			}
-			// Сбрасываем счетчик редиректов
-			$this->counter = 0;
-			// Выводим результат
-			return substr($this->data, 0, $length);
+				} else show::alert('В переадресации отказано - '.$location.', хост: '.$parse['host']);
+			// Если начинается на слеш
+			} else if ($location[0] == '/') {
+				// Добавляем протокол и хост
+				$location = $parse['scheme'].'://'.$parse['host'].$location;
+				// Вывод в лог если отладка
+				if (strlen($this->debug)) show::alert('Переадресация (2) - '.$location.', '.$this->counter);
+				// Рекурсивное чтение страницы
+				$this->data = $this->get($location, array(), '', $cookie, 8, $start, $length);
+			// Если начинается на букву
+			} else if (preg_match('#^\w+#', $location)) {
+				// Добавляем протокол и хост
+				$location = $parse['scheme'].'://'.$parse['host'].'/'.$location;
+				// Вывод в лог если отладка
+				if (strlen($this->debug)) show::alert('Переадресация (3) - '.$location.', '.$this->counter);
+				// Рекурсивное чтение страницы
+				$this->data = $this->get($location, array(), '', $cookie, 8, $start, $length);
+			// Иначе - выводим ошибку
+			} else show::alert('Не возможно переадресовать - '.$location);
+		}
+		// Сбрасываем счетчик редиректов
+		$this->counter = 0;
+		// Выводим результат
+		return substr($this->data, 0, $length);
 	}
 
 	/**

@@ -110,7 +110,6 @@ class data_base extends \mysqli {
 				$result->row = isset($data[0]) ? $data[0] : array();
 				$result->rows = $data;
 				// Освобождение результатов запроса
-				// ! А не закрытие соединения !
 				$query->free_result();
 				// Подсчитываем время получения данных
 				$this->time_taken += ($time_taken = $this->get_time() - $before);
