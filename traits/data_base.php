@@ -12,12 +12,12 @@ namespace traits;
  * Пример использования:
 
 	// Подключение библиотеки
-	require_once 'traits/register.php';
+	require_once "traits/register.php";
 
 	// Инициализация класса взаимодействия с базой данных
-	$db = new traits\data_base('test', 'password');
+	$db = new traits\data_base("test", "password");
 	// Выполняем запрос
-	$data = $db->query('SELECT * FROM table');
+	$data = $db->query("SELECT * FROM table");
 
  */
 
@@ -58,19 +58,18 @@ class data_base extends \mysqli {
 	 * @param $database
 	 * @param string $port
 	 */
-	public function __construct($username, $password, $database = '', $hostname = 'localhost', $port = '3306') {
+	public function __construct($username, $password, $database = "", $hostname = "localhost", $port = "3306") {
 		// Если не установлена база данных, берем из логина
-		if ($database == '') $database = $username;
+		if ($database == "") $database = $username;
 		// Подключение к базе данных
 		@parent::__construct($hostname, $username, $password, $database, $port);
 		// Если не удалось подключиттся
 		if ($this->connect_errno) {
 			// Выводим ошибку и прерываем выполнение
-			$this->show_error('Could not connect to mysqli server!', 0);
+			$this->show_error("Could not connect to mysqli server!", 0);
 		}
 		// Установка кодировки
 		$this->set_charset("utf8");
-		$this->query("SET SQL_MODE = ''");
 	}
 
 	/**
@@ -121,9 +120,9 @@ class data_base extends \mysqli {
 			}
 			// История запросов
 			$this->query_list[] = array(
-				'query' => $sql,
-				'time_query' => $time_query,
-				'time_taken' =>  $time_taken
+				"query" => $sql,
+				"time_query" => $time_query,
+				"time_taken" =>  $time_taken
 			);
 			// Вывод данных
 			return $result;
@@ -136,7 +135,7 @@ class data_base extends \mysqli {
 	 * @return float
 	 */
 	function get_time() {
-		list($seconds, $micro) = explode(' ', microtime());
+		list($seconds, $micro) = explode(" ", microtime());
 		return ((float)$seconds + (float)$micro);
 	}
 
@@ -147,7 +146,7 @@ class data_base extends \mysqli {
 	 * @param array $options
 	 * @return false|float|int|string
 	 */
-	public function safe($value, $type = 'default', $options = array(15, 4)) {
+	public function safe($value, $type = "default", $options = array(15, 4)) {
 		// Возвращаем дробное число
 		if (is_float($value)) $result = (float)$value;
 		// Возвращаем просто число
@@ -157,15 +156,15 @@ class data_base extends \mysqli {
 		// Приведение к типу
 		switch ($type) {
 			// Если ip адрес
-			case 'ip':
+			case "ip":
 				// Если не корректный ip адрес
-				if (!preg_match('#^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$#', $result)) {
+				if (!preg_match("#^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$#", $result)) {
 					// Устанавливаем по умолчанию
 					$result = "0.0.0.0";
 				}
 				break;
 			// Если десятичное число
-			case 'decimal':
+			case "decimal":
 				// Длина целого числа
 				$length = intval($options[0] - $options[1]);
 				// Длина дробного числа
@@ -173,30 +172,30 @@ class data_base extends \mysqli {
 				// Общая длина
 				$full = $length + 1;
 				// Если не корректное десятичное число
-				if (!preg_match('#^\d{1,'.$length.'}\.\d{1,'.$part.'}$#', $result)) {
+				if (!preg_match("#^\d{1,".$length."}\.\d{1,".$part."}$#", $result)) {
 					// Приводим к нужному формату
-					$result = number_format($result, $part, '.', '');
+					$result = number_format($result, $part, ".", "");
 					// Иначе выводим ошибку и прерываем выполнение
 					if (strlen($result) > $full) $this->show_error(
-						'Overflow decimal: '.$result.', format: ('.$options[0].','. $options[1].')'
+						"Overflow decimal: ".$result.", format: (".$options[0].",". $options[1].")"
 					);
 				}
 				break;
 			// Если приведение к дате
-			case 'date':
+			case "date":
 				// Если не корректная дата
-				if (!preg_match('#^\d{4,4}\-\d{2,2}\-\d{2,2}$#', $result)) {
+				if (!preg_match("#^\d{4,4}\-\d{2,2}\-\d{2,2}$#", $result)) {
 					// Приводим к нужному формату
 					$result = date("Y-m-d", strtotime($result));
 				}
 				break;
 			// Если приведение к числу
-			case 'int':
+			case "int":
 				// Если не число то приводим к числу
 				if (!is_numeric($result)) $result = (int)$result;
 				break;
 			// Если приведение к дробному
-			case 'float':
+			case "float":
 				// Если не дробное то делаем дробным
 				if (!is_float($result)) $result = (float)$result;
 				break;
@@ -242,35 +241,35 @@ class data_base extends \mysqli {
 	 * @param $num
 	 * @param string $query
 	 */
-	function show_error($error, $num = '', $query = '')	{
+	function show_error($error, $num = "", $query = "")	{
 		// Трассировка к файлу
 		$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 		// Исключаем вывод из трассировки последней функции
-		if ($trace[1]['function'] == 'query') $level = 1; else $level = 0;
+		if ($trace[1]["function"] == "query") $level = 1; else $level = 0;
 		// Удаляем путь к корню
-		$trace[$level]['file'] = str_replace(root, '', $trace[$level]['file']);
+		$trace[$level]["file"] = str_replace(root, "", $trace[$level]["file"]);
 		// IP клиента
 		$ip = $_SERVER["REMOTE_ADDR"];
 		// Если установлена отладка и валидный ip адрес
-		if (preg_match('#^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$#', $ip)) {
+		if (preg_match("#^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$#", $ip)) {
 			// Получение метки времени
-			list ($seconds, $micro) = explode(' ', microtime());
+			list ($seconds, $micro) = explode(" ", microtime());
 			// Название файла с запросами
-			$file = $ip.' '.date("Y-m-d H:i:s").'.'.$micro.'.error.sql';
+			$file = $ip." ".date("Y-m-d H:i:s").".".$micro.".error.sql";
 			// Запись запросов в файл
-			file_put_contents(data.'/'.$file,
-				"File: ".$trace[$level]['file']." Line: ".$trace[$level]['line']."\r\n".
+			file_put_contents(data."/".$file,
+				"File: ".$trace[$level]["file"]." Line: ".$trace[$level]["line"]."\r\n".
 				"Error: ".$error."\r\nQuery: ".$query
 			);
 		}
 		// Экранирование специальных символов
-		$query = htmlspecialchars($query, ENT_QUOTES, 'ISO-8859-1');
-		$error = htmlspecialchars($error, ENT_QUOTES, 'ISO-8859-1');
+		$query = htmlspecialchars($query, ENT_QUOTES, "ISO-8859-1");
+		$error = htmlspecialchars($error, ENT_QUOTES, "ISO-8859-1");
 		// Вывод ошибки
 		echo str_replace(
-			array('{file}', '{line}', '{num}', '{error}', '{query}'),
-			array($trace[$level]['file'], $trace[$level]['line'], $num, $error, $query),
-			file_get_contents(root.'/template/db.html')
+			array("{file}", "{line}", "{num}", "{error}", "{query}"),
+			array($trace[$level]["file"], $trace[$level]["line"], $num, $error, $query),
+			file_get_contents(root."/template/db.html")
 		);
 		// Прерываем выполнение
 		die();

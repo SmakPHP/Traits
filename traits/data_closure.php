@@ -34,16 +34,16 @@ namespace traits;
 	);
 
 	// Подключение библиотеки
-	require_once 'traits/register.php';
+	require_once "traits/register.php";
 	// Инициализация класса для работы с древовидными данными
-	$db = new traits\data_base('test', 'password');
+	$db = new traits\data_base("test", "password");
 
 	// Шаблон данных для добавления
 	$data = array(
-		'name' => 'Name',
-		'vendor' => 'Vendor name',
-		'image' => 'Path to image',
-		'description' => 'Sample description',
+		"name" => "Name",
+		"vendor" => "Vendor name",
+		"image" => "Path to image",
+		"description" => "Sample description",
 	);
 
 	// Добавляем данные
@@ -69,13 +69,13 @@ class data_closure extends data_base {
 	 * Даблица с элементами
 	 * @var string
 	 */
-	public $table = 'cs_table';
+	public $table = "cs_table";
 
 	/**
 	 * Таблица дерева элементов
 	 * @var string
 	 */
-	public $closure_table = 'cs_tree';
+	public $closure_table = "cs_tree";
 
 	/**
 	 * Добавление узла (в качестве последнего дочернего элемента)
@@ -84,13 +84,13 @@ class data_closure extends data_base {
 	 * @return mixed
 	 */
 	public function add($data, $target_id = 0)	{
-		$target_id = $this->safe($target_id, 'int');
+		$target_id = $this->safe($target_id, "int");
 		$target = $this->query(
 			"SELECT `id` FROM `{$this->table}` WHERE `id` = {$target_id}"
 		);
-		$target_id = ($target->num_rows) ? $target->row['id'] : 0;
-		$names = "`".implode("`,`", array_map(array($this, 'safe'), array_keys($data)))."`";
-		$values = "'".implode("','", array_map(array($this, 'safe'), $data))."'";
+		$target_id = ($target->num_rows) ? $target->row["id"] : 0;
+		$names = "`".implode("`,`", array_map(array($this, "safe"), array_keys($data)))."`";
+		$values = "\"".implode("\",\"", array_map(array($this, "safe"), $data))."\"";
 		$this->query(
 			"INSERT INTO `{$this->table}` (".$names.") VALUES (".$values.")"
 		);
@@ -118,7 +118,7 @@ class data_closure extends data_base {
 			"JOIN `{$this->closure_table}` AS `c` ON `t`.`id` = `c`.`ancestor` ".
 			"WHERE `c`.`descendant` = {$node_id} AND `c`.`ancestor` <> {$node_id}";
 		if ($level)	{
-			$level = $this->safe($level, 'int');
+			$level = $this->safe($level, "int");
 			$sql .= " AND `c1`.`lvl` <= {$level}";
 		}
 		$result = $this->query($sql." ORDER BY `t`.`id` ASC");
@@ -133,7 +133,7 @@ class data_closure extends data_base {
 	 * @return mixed array
 	 */
 	public function get_children($node_id = 0, $self = false, $level = 0)	{
-		$node_id = $node_id ? $this->safe($node_id, 'int') : 1;
+		$node_id = $node_id ? $this->safe($node_id, "int") : 1;
 		$param = "`t`.*, `c2`.`ancestor` AS `parent`, `c1`.`lvl` AS `level`";
 		$sql =
 			"SELECT {$param} FROM `{$this->closure_table}` AS `c1` ".
@@ -143,7 +143,7 @@ class data_closure extends data_base {
 			"WHERE `c1`.`ancestor` = {$node_id}";
 		if (!$self)	$sql .= " AND `c1`.`descendant` <> {$node_id}";
 		if ($level)	{
-			$level = $this->safe($level, 'int');
+			$level = $this->safe($level, "int");
 			$sql .= " AND `c1`.`lvl` = {$level}";
 		}
 		$result = $this->query($sql." ORDER BY `t`.`id` ASC");
@@ -160,19 +160,19 @@ class data_closure extends data_base {
 			"SELECT `descendant` FROM `{$this->closure_table}` WHERE `ancestor` = {$node_id}"
 		);
 		if ($query->num_rows) {
-			$descendant = array_column($query->rows, 'descendant');
+			$descendant = array_column($query->rows, "descendant");
 			$query = $this->query(
 				"SELECT `id`, `descendant` FROM `{$this->closure_table}` ".
-				"WHERE `descendant` IN (".implode(',', $descendant).")"
+				"WHERE `descendant` IN (".implode(",", $descendant).")"
 			);
 			if ($query->num_rows) {
-				$id = array_column($query->rows, 'id');
-				$descendant = array_column($query->rows, 'descendant');
+				$id = array_column($query->rows, "id");
+				$descendant = array_column($query->rows, "descendant");
 				$this->query(
-					"DELETE FROM `{$this->table}` WHERE `id` IN (".implode(',', $descendant).")"
+					"DELETE FROM `{$this->table}` WHERE `id` IN (".implode(",", $descendant).")"
 				);
 				$this->query(
-					"DELETE FROM `{$this->closure_table}` WHERE `id` IN (".implode(',', $id).")"
+					"DELETE FROM `{$this->closure_table}` WHERE `id` IN (".implode(",", $id).")"
 				);
 			}
 		}
@@ -206,13 +206,13 @@ class data_closure extends data_base {
 	 * @param	string $key
 	 * @return	mixed	array
 	 */
-	public function assembly($nodes, $key = 'parent') {
+	public function assembly($nodes, $key = "parent") {
 		if (count($nodes) < 1) return false;
 		$trees = array();	$stack = array();
 		foreach ($nodes as $node) {
 			// Number of stack items
 			$counter = count($stack);
-			// Check if we're dealing with different levels
+			// Check if we"re dealing with different levels
 			while ($counter > 0 && $stack[$counter - 1][$key] >= $node[$key]) {
 				array_pop($stack);
 				$counter--;
@@ -220,12 +220,12 @@ class data_closure extends data_base {
 			// Stack not empty (we are inspecting the children)
 			if ($counter > 0) {
 				$idx = $counter - 1;
-				if (!isset($stack[$idx]['children']))	{
-					$stack[$idx]['children'] = array();
+				if (!isset($stack[$idx]["children"]))	{
+					$stack[$idx]["children"] = array();
 				}
-				$i = count($stack[$idx]['children']);
-				$stack[$idx]['children'][$i] = $node;
-				$stack[] = &$stack[$idx]['children'][$i];
+				$i = count($stack[$idx]["children"]);
+				$stack[$idx]["children"][$i] = $node;
+				$stack[] = &$stack[$idx]["children"][$i];
 			}	else {
 				$i = count($trees);
 				$trees[$i] = $node;
