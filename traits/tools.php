@@ -15,7 +15,7 @@ class tools {
 	 * @param string $reg Фильтр (регулярное выражение)
 	 * @return bool
 	 */
-	function read_get($name, &$value, $reg = "|^[A-z0-9\.\-]+$|") {
+	public static function read_get($name, &$value, $reg = "|^[A-z0-9\.\-]+$|") {
 		// Инициализация переменных
 		global $_GET; $value = "";
 		// Проверяем значение переменной
@@ -33,7 +33,7 @@ class tools {
 	 * @param string $reg Фильтр (регулярное выражение)
 	 * @return bool
 	 */
-	function read_post($name, &$value, $reg = "|^[A-z0-9\.\-]+$|") {
+	public static function read_post($name, &$value, $reg = "|^[A-z0-9\.\-]+$|") {
 		// Инициализация переменных
 		global $_POST; $value = "";
 		// Проверяем значение переменной
