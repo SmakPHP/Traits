@@ -45,7 +45,7 @@ class show {
 		// Установка директории вывода
 		self::$path = is_dir($path) ? realpath($path) : null;
 		// Установка флага запуска из командной строки
-		self::$shell = isset($_SERVER['SHELL']);
+		self::$shell = isset($_SERVER["SHELL"]);
 	}
 
 	/**
@@ -72,13 +72,13 @@ class show {
 		// Если установлена директория для логирования
 		if (!is_null(self::$path)) {
 			// Записываем данные в лог файл
-			file_put_contents(self::$path.$name, date("Y-m-d H:i:s")." - ".$message."\r\n", FILE_APPEND);
+			file_put_contents(self::$path."/".$name, date("Y-m-d H:i:s")." - ".$message."\r\n", FILE_APPEND);
 			// Если установлены данные
 			if (strlen($data)) {
 				// Генерируем название файла для данных
-				$file = "debug.".date("Y-m-d_H-i-s").'.'.tools::random(7, "0123456789").".log";
+				$file = "debug.".date("Y-m-d_H-i-s").".".tools::random(7, "0123456789").".log";
 				// Записываем данные в файл
-				file_put_contents(self::$path.'/'.$file, $data);
+				file_put_contents(self::$path."/".$file, $data);
 				// Сохранение сообщение в лог
 				self::alert("Данные, см.: ".$file, $stop);
 			}
@@ -144,7 +144,7 @@ class show {
 	 * @param bool $dot Удалить точки
 	 * @return mixed|string
 	 */
-	function translit($sourse, $lower = true, $dot = true) {
+	public static function translit($sourse, $lower = true, $dot = true) {
 		// Список символов для преобразования
 		$lang = array(
 			"а" => "a",  "б" => "b",  "в" => "v",   "г" => "g",  "д" => "d", "е" => "e",
@@ -185,7 +185,7 @@ class show {
 	 * @param string $sourse
 	 * @return string
 	 */
-	function cyrillic_encode($sourse) {
+	public static function cyrillic_encode($sourse) {
 		// Если содержатся символы utf-8
 		if (tools::is_utf8($sourse)) {
 			// Просто устанавливаем исходную строку
@@ -230,7 +230,7 @@ class show {
 	 * @param string $target Тип открытия
 	 * @return string
 	 */
-	public static function build_link($link, $text = "", $target = " target='_blank'") {
+	public static function create_link($link, $text = "", $target = " target='_blank'") {
 		// Если текст ссылки не установлен
 		if ($text == "") $info = $link; else $info = $text;
 		// Выводим ссылку

@@ -254,7 +254,7 @@ class get_page {
 		// Выполняем чтение страницы с установленными параметрами
 		curl_exec($curl);
 		// Проверяем наличие ошибки
-		if (curl_errno($curl)) {
+		if (curl_errno($curl) && strlen($this->debug)) {
 			// Выводим ошибку
 			show::alert("Ошибка: ".curl_error($curl).", при чтении страницы: ".$link);
 		}
