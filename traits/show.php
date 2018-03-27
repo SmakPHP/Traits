@@ -68,7 +68,7 @@ class show {
 		// Если запуск из командной строки то выводим как есть
 		if (self::$shell) echo $message."\r\n";
 		// Иначе выводим сообщение в виде html строки
-		else echo "<pre>".htmlspecialchars($message)."</pre>";
+		else echo "<pre style='margin:0px;'>".htmlspecialchars($message)."</pre>";
 		// Если установлена директория для логирования
 		if (!is_null(self::$path)) {
 			// Записываем данные в лог файл

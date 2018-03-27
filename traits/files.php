@@ -209,7 +209,7 @@ class files {
 	 * @param int $count Количество
 	 * @return bool|string
 	 */
-	function read_last($name, $count = 1) {
+	public static function read_last($name, $count = 1) {
 		// Открываем файл для чтения
 		$result = ""; $file = fopen($name, "r"); if ($file) {
 			// Перемещаем курсор в конец файла
