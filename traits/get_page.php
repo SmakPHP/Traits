@@ -223,7 +223,7 @@ class get_page {
 		// Ограничиваем размер загрузки
 		curl_setopt($curl, CURLOPT_WRITEFUNCTION, array($this, "process"));
 		// Если отправка данных
-		if (count($post)) {
+		if (!empty($post)) {
 			// Устанавливаем отправляемые данные
 			curl_setopt($curl, CURLOPT_POST, true);
 			curl_setopt($curl, CURLOPT_POSTFIELDS, $post);

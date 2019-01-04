@@ -247,4 +247,14 @@ class show {
 		return "<script>alert('".$msg."');<script>";
 	}
 
+  /**
+   * Текущая метка времени с миллисекундами
+   * @param int $round Точность
+   * @return string
+   */
+  public static function current_time($round = 8) {
+    list($seconds, $micro) = explode(" ", microtime());
+    return number_format((float)$seconds + (float)$micro, $round, ".", "");
+  }
+
 }
