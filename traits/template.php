@@ -1,12 +1,12 @@
 <?php
 
-// Основное пространство имен
+// Main namespace
 namespace traits;
 
 /**
- * Класс быстрого шаблонизатора
+ * Quick template class
  *
- * Пример использования:
+ * Usage example:
 
 	$tp = new traits\template("index.html");
 	$tp->set("body", "text");
@@ -16,31 +16,29 @@ namespace traits;
 class template {
 
 	/**
-	 * Текст шаблона
+	 * Template text
 	 * @var bool|string
 	 */
 	public $result = "";
 
-	/**
-	 * Добавляем указание пути к шаблону
-	 * @param $path
-	 */
-	public function __construct($path) {
-		// Если установлен путь к шаблону
-		if (strlen($path)) {
-			// Загрузка шаблона
-			$this->result = files::read_file($path);
-			// Иначе - выводим ошибку
-		} else show::alert("Необходимо установить путь к шаблону", true);
-	}
+    /**
+     * Loading template
+     * @param $path
+     */
+    public function __construct($path) {
+        if (strlen($path)) {
+            if (!preg_match("#[/\\\]+#", $path)) $path = show."/".$path;
+            if (file_exists($path)) $this->result = files::read_file($path);
+            else show::alert("Template file not found: ".$path, true);
+        } else show::alert("Need to set the path to the template", true);
+    }
 
 	/**
-	 * Установка значения
+	 * Setting value
 	 * @param $name
 	 * @param $value
 	 */
 	public function set($name, $value) {
-		// Установка данных
 		$this->result = str_replace("{".$name."}", $value, $this->result);
 	}
 

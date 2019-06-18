@@ -1,123 +1,121 @@
 <?php
 
-// Основное пространство имен
+// Main namespace
 namespace traits;
 
 /**
- * Класс для чтения страницы
+ * Class to read the page
  *
- * Дополнительно:
+ * Additionally:
  * http://php.net/manual/ru/function.curl-setopt.php
  *
- * Пример использования:
+ * Usage example:
 
-	// Подключение библиотеки
+	// Library connection
 	require_once "traits/register.php";
-
-	// Инициализация класса вывода
+	// Class initialization
 	$show = new traits\show(__DIR__);
 
-	// Инициализация класса загрузки страниц
+	// Initialization of the page loading class
 	$pager = new traits\get_page();
-	// Запрашиваем страницу
+	// Request a page
 	$data = $pager->get("http://php.net");
 
  */
 class get_page {
 
 	/**
-	 * Дополнительные заголовки
+	 * Additional headers
 	 * @var array
 	 */
 	public $extra = array();
 
 	/**
-	 * Полученные заголовки
+	 * Received headers
 	 * @var string
 	 */
 	public $header = "";
 
 	/**
-	 * Полученные данные
+	 * Received data
 	 * @var string
 	 */
 	public $data = "";
 
 	/**
-	 * Отладка
+	 * Debug
 	 * @var string
 	 */
 	private $debug = "";
 
 	/**
-	 * Прокси
+	 * Proxy
 	 * @var array
 	 */
-	private $proxy = array("type" => "sock5",
-												 "host" => "127.0.0.1:8888");
+	private $proxy = array("type" => "sock5", "host" => "127.0.0.1:8888");
 
 	/**
-	 * Поддерживаемые типы прокси
+	 * Supported proxy types
 	 * @var array
 	 */
 	private $types = array("sock5", "http");
 
 	/**
-	 * Фильтр прокси
+	 * Proxy filter
 	 * @var int
 	 */
 	private $filter = "#^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\:\d{2,5}$#";
 
 	/**
-	 * Максимальное время ожидания данных
+	 * Maximum data latency
 	 * @var int
 	 */
 	private $timeout = 30;
 
 	/**
-	 * Максимальное количество редиректов
+	 * Maximum number of redirects
 	 * @var int
 	 */
 	private $redirect = 6;
 
 	/**
-	 * Разрешить редирект на любой хост
+	 * Allow redirect to any host
 	 * @var bool
 	 */
 	private $all = false;
 
 	/**
-	 * Подсчет редиректов
+	 * Redirect counting
 	 * @var int
 	 */
 	private $counter = 0;
 
 	/**
-	 * Максимальный размер данных
+	 * Maximum data size
 	 * @var int
 	 */
 	private $length = 0;
 
 	/**
-	 * Браузер
+	 * Agent
 	 * @var string
 	 */
 	private $agent = "";
 
 	/**
-	 * Ссылающаюся страница
+	 * Referring page
 	 * @var string
 	 */
 	private $referer = "";
 
 	/**
-	 * Директория вывода
+	 * Output directory
 	 * @var string
 	 */
 	private static $path = null;
 
 	/**
-	 * Конструктор класса
+	 * Class constructor
 	 * @param string $path Директория вывода
 	 * @param array $proxy Прокси
 	 * @param int $redirect Максимальное количество редиректов
@@ -127,10 +125,10 @@ class get_page {
 	 * @throws \Exception
 	 */
 	public function __construct($path = "", $proxy = array(), $redirect = 6,
-															$all = false, $timeout = 30, $debug = false) {
+                                $all = false, $timeout = 30, $debug = false) {
 		// Валидация прокси
 		if (isset($proxy["type"]) && in_array($proxy["type"], $this->types) &&
-				isset($proxy["host"]) && preg_match($this->filter, $proxy["host"])) $this->proxy = $proxy;
+            isset($proxy["host"]) && preg_match($this->filter, $proxy["host"])) $this->proxy = $proxy;
 		// Иначе просто сбрасываем
 		else $this->proxy = array();
 		// Установка максимальное количества редиректов
@@ -141,7 +139,7 @@ class get_page {
 		$this->all = ($all) ? true : false;
 		// Установка браузера
 		$this->agent = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ".
-									 "Chrome/62.0.3202.62 Safari/537.36";
+                       "Chrome/62.0.3202.62 Safari/537.36";
 		// Установка директории вывода
 		self::$path = is_dir($path) ? realpath($path) : null;
 		// Если установлен флаг отладки
@@ -168,7 +166,7 @@ class get_page {
 	 * @throws \Exception
 	 */
 	public function get($link, $post = array(), $referer = "", $cookie = "auto",
-											$cleaning = 8, $start = -1, $length = 2000000) {
+                        $cleaning = 8, $start = -1, $length = 2000000) {
 		// Инициализация
 		$this->header = $this->data = "";
 		// Устанавливаем максимальный размер данных

@@ -1,32 +1,28 @@
 <?php
 
-// Основное пространство имен
+// Main namespace
 namespace traits;
 
 /**
- * Класс для работы с файлами
+ * Class for working with files
  */
 class files {
 
 	/**
-	 * Ищет путь к директории с заданным именем из исходного
+	 * Looks for the path to the directory with the specified name
 	 * @param $path
 	 * @param $name
 	 * @return mixed
 	 */
 	public static function search($path, $name) {
-		// Текущая директория
 		$dir = dirname($path);
-		// Если дошли до главной возвращаем просто главную
-		if ($dir == '.') return '/';
-		// Если дошли до заданной то возвращаем путь к ней
+		if ($dir == ".") return "/";
 		else if (basename($dir) == $name) return $dir;
-		// Иначе делеаем рекрсивный поиск
 		else return self::search($dir, $name);
 	}
 
 	/**
-	 * Чтение файла
+	 * Read file
 	 * @param string $path Путь к файлу
 	 * @param int $start Читать с позиции
 	 * @param int $len Длиной
@@ -42,7 +38,7 @@ class files {
 		// Если произошла ошибка при открытии файла
 		if ($data === false) {
 			// Выводим ошибку если установлен вывод предупреждений
-			if ($alert) show::alert("Не удалось открыть файл: ".$path, $stop);
+			if ($alert) show::alert("Could not open file: ".$path, $stop);
 		}
 		// Выводим результат
 		return $data;

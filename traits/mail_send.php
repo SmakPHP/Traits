@@ -1,41 +1,37 @@
 <?php
 
-// Основное пространство имен
+// Main namespace
 namespace traits;
 
 /**
- * Класс почты
+ * Mail class
  *
- * Пример использования:
+ * Usage example:
 
-	// Подключение библиотеки
-	require_once 'traits/register.php';
-
-	// Пример отправки письма в формате utf8
-	$is_send = traits\mail_send::utf8('sddk@list.ru', 'Admin', 'from@mail.ru', 'Title', 'Message');
+	// Library connection
+	require_once "traits/register.php";
+	// An example of sending a letter in utf8 format
+	$is_send = traits\mail_send::utf8(
+        "email@email.ru", array("name" => "WebMaster", "email" => "email@email.ru"), "title", "message"
+    );
 
  */
 class mail_send {
 
 	/**
-	 * Функция отправки письма
-	 * @param string $to Кому отправляем
-	 * @param string $user От кого (имя отправителя)
-	 * @param string $email Откуда (адрес отправителя)
-	 * @param string $title Заголовок отправляемого сообщения
-	 * @param string $message Отправляемое сообщение
+	 * Email feature
+	 * @param string $to send to
+	 * @param array $from from whom
+	 * @param string $title the headline of the message
+	 * @param string $message message
 	 * @return bool
 	 */
-	function utf8($to, $user, $email, $title = "", $message = "") {
-		// Устанавливаем автора
-		$user = "=?UTF-8?B?".base64_encode($user)."?=";
-		// Устанавливаем заголовок
+	function utf8($to, $from = array("name" => "WebMaster", "email" => "email@email.ru"), $title = "", $message = "") {
+		$user = "=?UTF-8?B?".base64_encode($from["name"])."?=";
 		$title = "=?UTF-8?B?".base64_encode($title)."?=";
-		// Устанавливаем специальные заголовки
-		$headers = "From: ".$user." <".$email.">\r\n".
+		$headers = "From: ".$user." <".$from["email"].">\r\n".
 			"MIME-Version: 1.0\r\n".
 			"Content-type: text/html; charset=UTF-8\r\n";
-		// Отправка письма
 		return mail($to, $title, $message, $headers);
 	}
 

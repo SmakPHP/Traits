@@ -1,36 +1,37 @@
 <?php
 
 /**
- * Функция автоматического подключения классов библиотеки
+ * Library class auto-connect feature
  * @param $class
  */
 function register($class) {
-	// Подключаем только свои библиотеки
+	// We connect only our libraries
 	if (strpos($class, "traits") === 0) {
-		// Путь к подключаемому классу
 		$path = dirname(__DIR__)."/".str_replace("\\", "/", $class).".php";
-		// Если файл существует то загружаем
 		if (file_exists($path)) require_once $path;
 	}
 }
 
-// Регистрируем обработчик автоматического подключения классов
+// Registering the class automatic connection handler
 spl_autoload_register("register");
 
-// Устанавливаем главную директорию
+// Install directories
 if (!defined("root")) define("root", dirname(__DIR__));
-// Устанавливааем директорию для вывода
 if (!defined("data")) define("data", root."/data");
+if (!defined("show")) define("show", root."/show/");
 
-// Проверяем наличие директории для вывода
+// Create an output directory if necessary
 if (!file_exists(data)) {
-	// Пробуем создать директорию
-	if (mkdir(data, true)) {
-		// Устанавливаем полный доступ
-		chmod(data, 0777);
-	// Вывод исключения если не удалось создать директорию
-	} else throw new \Exception("Не удалось создать директорию: ".data);
+	if (mkdir(data, true)) chmod(data, 0777);
+  else throw new \Exception("Could not create data directory: ".data);
 }
 
-// Инициализация класса вывода
+// Create an template directory if necessary
+if (!file_exists(show)) {
+  if (mkdir(show, true)) chmod(show, 0777);
+  else throw new \Exception("Could not create template directory: ".show);
+}
+
+// Class initialization
 $show = new traits\show(data);
+$cache = new traits\cache(data);

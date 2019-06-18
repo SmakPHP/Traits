@@ -1,261 +1,241 @@
 <?php
 
-// Основное пространство имен
+// Main namespace
 namespace traits;
 
 /**
- * Класс обработки изображения
+ * Image processing class
  *
- * Пример использования:
+ * Usage example:
 
 	$thumb = new traits\thumb("image.jpg");
 	$thumb->watermark();
 	$thumb->save("new.jpg");
 
  */
+
+/**
+ * Class thumb
+ * @package traits
+ */
 class thumb {
 
 	/**
-	 * Обрабатываемое изображение
+	 * Processed image
 	 * @var
 	 */
-	public $image;
+    private $image = array("format" => "", "src" => "");
 
 	/**
-	 * Путь к накладываемому изображению
+	 * Overlay image path
 	 * @var string
 	 */
-	public $watermark = "";
+    private $watermark = "";
 
 	/**
-	 * Отступы накладываемого изображения
+	 * Indentation overlays
 	 * @var array
 	 */
-	public $margin = array(
+    private $margin = array(
 		"width" => 7,
 		"height" => 7
 	);
 
 	/**
-	 * Инициализация класса
-	 * @param string $source
-	 * @param string $watermark Водяной знак (изображение)
-	 * @param int $margin_w Отступ по ширине
-	 * @param int $margin_h Отступ по высоте
+	 * Class initialization
+	 * @param string $src path or data image
+	 * @param string $watermark path to watermark
+	 * @param int $margin_w width offset
+	 * @param int $margin_h indent height
 	 */
-	public function __construct($source, $watermark = "", $margin_w = 7, $margin_h = 7)	{
-		// Устанавливаем путь к накладываемому изображению
-		$this->watermark = $watermark;
-		// Устанавливаем сдвиги по ширине и высоте
-		if ($margin_w >= 0) $this->margin["width"] = $margin_w;
-		if ($margin_h >= 0) $this->margin["height"] = $margin_h;
-		// Получаем информацию об исходном изображении
-		$info = getimagesize($source);
-		// Получаем расширение файла
-		$img_name_arr = explode(".", $source);
-		$type = end($img_name_arr);
-		// Проверяем на поддержку форматов
-		if ($info[2] == 1 && ($type == "jpg" || $type == "jpeg")) {
-			// Вывод сообщения
-			show::alert("Не поддерживаемый формат: ".$source);
-		}
-		// Загрузка изображения по типам
-		if ($info[2] == 2) {
-			$this->image["format"] = "JPEG";
-			$this->image["src"] = imagecreatefromjpeg($source);
-		} elseif ($info[2] == 3) {
-			$this->image["format"] = "PNG";
-			$this->image["src"] = imagecreatefrompng($source);
-		} elseif ($info[2] == 1) {
-			$this->image["format"] = "GIF";
-			$this->image["src"] = imagecreatefromgif($source);
-		// Выводим сообщение если не поддерживаемый тип изображения
-		} else show::alert("Не поддерживаемый формат: ".$source);
-		// Если не удалось загрузить изображение
-		if (!$this->image["src"]) show::alert("Не удалось открыть изображение: ".$source);
-		// Установка параметров изображения
-		$this->image["lebar"] = imagesx($this->image["src"]);
-		$this->image["tinggi"] = imagesy($this->image["src"]);
+	public function __construct($src, $watermark = "", $margin_w = 7, $margin_h = 7) {
+	    if (is_file($src)) {
+            $info = getimagesize($src); $info["f"] = true;
+        } else {
+            $info = getimagesizefromstring($src); $info["f"] = false;
+        }
+        if (isset($info["mime"])) {
+            $type = str_replace("image/", "", $info["mime"]);
+            if ($type == "jpg" || $type == "jpeg") {
+                $this->image["format"] = "jpg";
+                $this->image["src"] = $info["f"] ? imagecreatefromjpeg($src) : imagecreatefromstring($src);
+            } elseif ($type == "png") {
+                $this->image["format"] = "png";
+                $this->image["src"] = $info["f"] ? imagecreatefrompng($src) : imagecreatefromstring($src);
+            } elseif ($type == "gif") {
+                $this->image["format"] = "gif";
+                $this->image["src"] = $info["f"] ? imagecreatefromgif($src) : imagecreatefromstring($src);
+            } else show::alert("Unsupported format: ".$src);
+        }
+		if (!$this->image["src"]) show::alert("Could not open image: ".($info["f"] ? $src : "raw"));
+        $this->watermark = $watermark;
+        if ($margin_w >= 0) $this->margin["width"] = $margin_w;
+        if ($margin_h >= 0) $this->margin["height"] = $margin_h;
+		$this->image["lebar"] = (isset($info[0])) ? $info[0] : 0;
+		$this->image["tinggi"] = (isset($info[1])) ? $info[1] : 0;
 		$this->image["lebar_thumb"] = $this->image["lebar"];
 		$this->image["tinggi_thumb"] = $this->image["tinggi"];
-		$this->image["quality"] = 90;
-		// Если изображение слишком маленькое
-		if (($this->image["lebar"] < 10) || ($this->image["tinggi"] < 10)) {
-			// Вывод сообщения
-			show::alert("Слишком маленькое изображение: ".$source);
-		}
+		$this->image["quality"] = 75;
 	}
 
 	/**
-	 * Обрезка изображения
+	 * Image cropping
 	 * @param $new_w
 	 * @param $new_h
 	 * @return bool
 	 */
 	public function crop($new_w, $new_h) {
-		// Получение ширины и высоты исходного изображения
-		$w = $this->image["lebar"];
-		$h = $this->image["tinggi"];
-		// Если изображение меньше размеров для обрезки
-		if (($w <= $new_w) && ($h <= $new_h)) {
-			// Прописываем размеры уменьшенного изображения
-			$this->image["lebar_thumb"] = $w;
-			$this->image["tinggi_thumb"] = $h;
-			// Вывод сообщения
-			show::alert("Слишком маленькое изображение для обрезки изображения");
+		$width = $this->image["lebar"];
+		$height = $this->image["tinggi"];
+		if (($width <= $new_w) && ($height <= $new_h)) {
+			$this->image["lebar_thumb"] = $width;
+			$this->image["tinggi_thumb"] = $height;
+			show::alert("Image too small to trim");
 		}
-		// Получаем наибольшие пропорции нового размера к исходному
-		$size_ratio = max($new_w / $w, $new_h / $h);
-		// Установка размеров копируемого блока
+		// We get the greatest proportions
+		$size_ratio = max($new_w / $width, $new_h / $height);
 		$src_w = ceil($new_w / $size_ratio);
 		$src_h = ceil($new_h / $size_ratio);
-		// Установка накальных координат копируемого блока
-		$sx = floor(($w - $src_w) / 2);
-		$sy = floor(($h - $src_h) / 2);
-		// Создание пустого изображения
+		// Setting the filament coordinates of the copied block
+		$sx = floor(($width - $src_w) / 2);
+		$sy = floor(($height - $src_h) / 2);
 		$this->image["des"] = imagecreatetruecolor($new_w, $new_h);
-		// Если исходное изображение в формате png
-		if ($this->image["format"] == "PNG") {
-			// Выключение альфа сопряжения и установка альфа флага
+		if ($this->image["format"] == "png") {
 			imagealphablending($this->image["des"], false);
 			imagesavealpha($this->image["des"], true);
 		}
-		// Копирование нового старого изображения на новый холст
 		imagecopyresampled($this->image["des"], $this->image["src"], 0, 0, $sx, $sy, $new_w, $new_h, $src_w, $src_h);
-		// Переопределение старого изображения на новое
 		$this->image["src"] = $this->image["des"];
-		// Вывод результата
 		return true;
 	}
 
 	/**
-	 * Создание миниатюрной копии изображения
+	 * Creating a miniature copy of the image
 	 * @param int $size
 	 * @return bool
 	 */
 	public function scale($size = 100) {
-		// Если изображение меньше размеров для уменьшения
 		if (($this->image["lebar"] <= $size) && ($this->image["tinggi"] <= $size)) {
-			// Прописываем размеры уменьшенного изображения
 			$this->image["lebar_thumb"] = $this->image["lebar"];
 			$this->image["tinggi_thumb"] = $this->image["tinggi"];
-			// Вывод сообщения
-			show::alert("Слишком маленькое изображение для уменьшения размера изображения");
+			show::alert("Image too small to reduce image size");
 		}
-		// Если щирина больше высоты исходного
 		if ($this->image["lebar"] >= $this->image["tinggi"]) {
-			// Устанавливаем фиксированную высоту
 			$this->image["tinggi_thumb"] = $size;
-			// Пропорционально исходному увеливаем ширину
 			$this->image["lebar_thumb"] = ($this->image["lebar"] / $this->image["tinggi"]) * $size;
 		} else {
-			// Устанавливаем фиксированную ширину
 			$this->image["lebar_thumb"] = $size;
-			// Пропорционально исходному увеливаем высоту
 			$this->image["tinggi_thumb"] = ($this->image["tinggi"] / $this->image["lebar"]) * $size;
 		}
-		// Если размеры меньше допустимых
 		if ($this->image["lebar_thumb"] < 1) $this->image["lebar_thumb"] = 1;
 		if ($this->image["tinggi_thumb"] < 1) $this->image["tinggi_thumb"] = 1;
-		// Создание пустого изображения
 		$this->image["des"] = imagecreatetruecolor($this->image["lebar_thumb"], $this->image["tinggi_thumb"]);
-		// Если исходное изображение в формате png
-		if ($this->image["format"] == "PNG") {
-			// Выключение альфа сопряжения и установка альфа флага
+		if ($this->image["format"] == "png") {
 			imagealphablending($this->image["des"], false);
 			imagesavealpha($this->image["des"], true);
 		}
-		// Копирование нового старого изображения на новый холст
 		imagecopyresampled($this->image["des"], $this->image["src"], 0, 0, 0, 0,
 			$this->image["lebar_thumb"], $this->image["tinggi_thumb"],
 			$this->image["lebar"], $this->image["tinggi"]);
-		// Переопределение старого изображения на новое
 		$this->image["src"] = $this->image["des"];
-		// Вывод результата
 		return true;
 	}
 
 	/**
-	 * Установка сжатия для jpeg
+	 * Set compression for jpeg
 	 * @param int $quality
 	 */
-	public function jpeg_quality($quality = 90) {
+	public function jpeg_quality($quality = 75) {
 		$this->image["quality"] = $quality;
 	}
 
 	/**
-	 * Наложение водяного знака
+	 * Watermark overlay
 	 */
 	public function watermark()	{
-		// Если не установлено накладываемое изображение
-		if ($this->watermark == "") show::alert("Не установлено накладываемое изображение", true);
-		// Получение размеров исходного изображения
+		if ($this->watermark == "") show::alert("No overlay image is set", true);
 		$image_width = imagesx($this->image["src"]);
 		$image_height = imagesy($this->image["src"]);
-		// Получение свойст накладываемого изображения
-		list($watermark_width, $watermark_height) = getimagesize($this->watermark);
-		// Установка координат накладываемого изображения
-		$watermark_x = $image_width - $this->margin["width"] - $watermark_width;
-		$watermark_y = $image_height - $this->margin["height"] - $watermark_height;
-		$watermark_x2 = $watermark_x + $watermark_width;
-		$watermark_y2 = $watermark_y + $watermark_height;
-		// Корректируем если выходит за пределы
-		if ($watermark_x2 > $image_width) $watermark_x2 = $image_width;
-		if ($watermark_y2 > $image_height) $watermark_y2 = $image_height;
+		list($w_width, $w_height) = getimagesize($this->watermark);
+		$watermark_x = $image_width - $this->margin["width"] - $w_width;
+		$watermark_y = $image_height - $this->margin["height"] - $w_height;
 		if ($watermark_x < 0) $watermark_x = 0;
 		if ($watermark_y < 0) $watermark_y = 0;
-		// Загрузка накладываемого изображения
 		$watermark = imagecreatefrompng($this->watermark);
-		// Установка прозрачности
 		imagealphablending($watermark, true);
 		imagealphablending($this->image["src"], true);
-		// Если исходное изображение в формате gif или png
-		if (($this->image["format"] == "GIF") || ($this->image["format"] == "PNG")) {
+		if (($this->image["format"] == "gif") || ($this->image["format"] == "png")) {
 			$temp_img = imagecreatetruecolor($image_width, $image_height);
 			imagealphablending($temp_img, false);
 			imagesavealpha($temp_img, true);
 			imagecopy($temp_img, $this->image["src"], 0, 0, 0, 0, $image_width, $image_height);
-			imagecopy($temp_img, $watermark, $watermark_x, $watermark_y, 0, 0, $watermark_width, $watermark_height);
+			imagecopy($temp_img, $watermark, $watermark_x, $watermark_y, 0, 0, $w_width, $w_height);
 			imagecopy($this->image["src"], $temp_img, 0, 0, 0, 0, $image_width, $image_height);
 			imagedestroy($temp_img);
-		// Если исходное изображение в формате jpg
 		} else {
-			// Просто накладываем сверху
-			imagecopy($this->image["src"], $watermark, $watermark_x, $watermark_y, 0,0, $watermark_width, $watermark_height);
+			imagecopy($this->image["src"], $watermark, $watermark_x, $watermark_y, 0,0, $w_width, $w_height);
 		}
-		// Освобождаем ресурсы
 		imagedestroy($watermark);
 	}
 
 	/**
-	 * Вывод изображения
-	 */
-	public function show() {
-		if ($this->image["format"] == "JPG" || $this->image["format"] == "JPEG") {
+	 * Image output
+     * @param string $format
+     */
+	public function show($format = "") {
+        if (strlen($format)) $this->image["format"] = $format;
+		if ($this->image["format"] == "jpg" || $this->image["format"] == "jpeg") {
 			imagejpeg($this->image["src"], "", $this->image["quality"]);
-		} elseif ($this->image["format"] == "PNG") {
+		} elseif ($this->image["format"] == "png") {
 			imagepng($this->image["src"]);
-		} elseif ($this->image["format"] == "GIF") {
+		} elseif ($this->image["format"] == "gif") {
 			imagegif($this->image["src"]);
 		}
 		imagedestroy($this->image["src"]);
 	}
 
 	/**
-	 * Сохранение изображения
-	 * @param string $path
-	 */
-	public function save($path = "") {
-		if ($this->image["format"] == "JPG" || $this->image["format"] == "JPEG") {
+	 * Saving image
+     * @param string $path
+     * @param string $format
+     */
+	public function save($path = "", $format = "") {
+        if (strlen($format)) $this->image["format"] = $format;
+		if ($this->image["format"] == "jpg" || $this->image["format"] == "jpeg") {
 			imagejpeg($this->image["src"], $path, $this->image["quality"]);
-		} elseif ($this->image["format"] == "PNG") {
+		} elseif ($this->image["format"] == "png") {
 			imagealphablending($this->image["src"], false);
 			imagesavealpha($this->image["src"], true);
-			imagepng($this->image["src"], $path);
-		} elseif ($this->image["format"] == "GIF") {
+			imagepng($this->image["src"], $path, 7);
+		} elseif ($this->image["format"] == "gif") {
 			imagegif($this->image["src"], $path);
 		}
 		imagedestroy($this->image["src"]);
 	}
+
+    /**
+     * Getting image
+     * @param bool $base64
+     * @param string $format
+     * @return bool|string
+     */
+	public function get($base64 = false, $format = "") {
+        $stream = fopen("php://memory", "w+");
+        if (strlen($format)) $this->image["format"] = $format;
+        if ($this->image["format"] == "jpg" || $this->image["format"] == "jpeg") {
+            imagealphablending($this->image["src"], true);
+            imagejpeg($this->image["src"], $stream, $this->image["quality"]);
+        } elseif ($this->image["format"] == "png") {
+            imagealphablending($this->image["src"], false);
+            imagesavealpha($this->image["src"], true);
+            imagepng($this->image["src"], $stream, 7);
+        } elseif ($this->image["format"] == "gif") {
+            imagegif($this->image["src"], $stream);
+        }
+        rewind($stream);
+        $result = stream_get_contents($stream);
+        imagedestroy($this->image["src"]);
+        return ($base64) ? "data:image/".strtolower($this->image["format"]).";base64,".base64_encode($result): $result;
+    }
 
 }

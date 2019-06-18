@@ -166,7 +166,7 @@ class tools {
 	 * @param string $string Текст для проверки
 	 * @return bool
 	 */
-	public static	function is_utf8($string) {
+	public static function is_utf8($string) {
 		return (bool)preg_match("//u", $string);
 	}
 
@@ -175,7 +175,7 @@ class tools {
 	 * @param string $text Текст в виде uD0B0uD0B1
 	 * @return mixed
 	 */
-	public static	function decode_utf8($text) {
+	public static function decode_utf8($text) {
 		return preg_replace_callback("/\x75([0-9a-fA-F]{4})/", function ($match) {
 			return mb_convert_encoding(pack("H*", $match[1]), "UTF-8", "UCS-2BE");
 		}, $text);
@@ -186,7 +186,7 @@ class tools {
 	 * @param int $size Размер в байтах
 	 * @return string
 	 */
-	public static	function round_byte($size) {
+	public static function round_byte($size) {
 		$list = array("b", "kb", "mb", "gb", "tb", "pb");
 		return round($size/pow(1024, ($i = floor(log($size, 1024)))), 2)." ".$list[$i];
 	}
@@ -197,7 +197,7 @@ class tools {
 	 * @param int $length Длина шестнадцатеричного
 	 * @return string
 	 */
-	public static	function dec_hex($value, $length = 8) {
+	public static function dec_hex($value, $length = 8) {
 		// Преобразование в шестнадцатеричную систему
 		$result = dechex($value);
 		// Скользо символов необходимо дополнить
@@ -214,7 +214,7 @@ class tools {
 	 * @param string $value Шестнадцетирный путь
 	 * @return string
 	 */
-	public static	function path_cache($path, $value) {
+	public static function path_cache($path, $value) {
 		// Создаем список поддиректорий
 		return $path."/".wordwrap(self::dec_hex($value), 2, "/", true);
 	}
@@ -225,7 +225,7 @@ class tools {
 	 * @param string $ip Проверяемый адрес
 	 * @return bool
 	 */
-	public static	function net_match($network, $ip) {
+	public static function net_match($network, $ip) {
 		// Парсим сеть
 		$ip_arr = explode("/", $network);
 		// Если был установлен просто адрес, то - добавляем маску
@@ -242,5 +242,60 @@ class tools {
 		// Проверяем на вхождение в маску сети
 		return ($ip_long & $mask) == ($network_long & $mask);
 	}
+
+    /**
+     * Base32 encode
+     * @param string $data
+     * @param string $base
+     * @return string
+     */
+    public static function base32_encode($data, $base = "abcdefghijklmnopqrstuvwxyz234567") {
+        $data_size = strlen($data);
+        $res = ""; $remainder = $remainder_size = 0;
+        for ($i = 0; $i < $data_size; $i++) {
+            $b = ord($data[$i]);
+            $remainder = ($remainder << 8) | $b;
+            $remainder_size += 8;
+            while ($remainder_size > 4) {
+                $remainder_size -= 5;
+                $c = $remainder & (31 << $remainder_size);
+                $c >>= $remainder_size;
+                $res .= $base[$c];
+            }
+        }
+        if ($remainder_size > 0) {
+            $remainder <<= (5 - $remainder_size);
+            $c = $remainder & 31;
+            $res .= $base[$c];
+        }
+        return $res;
+    }
+
+    /**
+     * Base32 decode
+     * @param string $data
+     * @param string $base
+     * @return string
+     */
+    public static function base32_decode($data, $base = "abcdefghijklmnopqrstuvwxyz234567") {
+        $data_size = strlen($data);
+        $res = ""; $buf = $buf_size = 0;
+        $char_map = array_flip(str_split($base));
+        for ($i = 0; $i < $data_size; $i++) {
+            $c = $data[$i];
+            if (!isset($char_map[$c])) {
+                if ($c == " " || $c == "\r" || $c == "\n" || $c == "\t") continue;
+            }
+            $b = $char_map[$c];
+            $buf = ($buf << 5) | $b;
+            $buf_size += 5;
+            if ($buf_size > 7) {
+                $buf_size -= 8;
+                $b = ($buf & (0xff << $buf_size)) >> $buf_size;
+                $res .= chr($b);
+            }
+        }
+        return $res;
+    }
 
 }
