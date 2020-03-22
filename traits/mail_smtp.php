@@ -8,56 +8,56 @@ namespace traits;
  *
  * Usage example:
 
-	// Library connection
-	require_once "traits/register.php";
-	// An example of sending a letter via smtp
-	$is_send = traits\mail_smtp::send_smtp(
-        "email@email.ru", array("name" => "WebMaster", "email" => "email@email.ru"),
-        "title", "message", "127.0.0.1", 25, "admin", "password"
-    );
+  // Library connection
+  require_once "traits/register.php";
+  // An example of sending a letter via smtp
+  $is_send = traits\mail_smtp::send_smtp(
+    "email@email.ru", array("name" => "WebMaster", "email" => "email@email.ru"),
+    "title", "message", "127.0.0.1", 25, "admin", "password"
+  );
 
  */
 class mail_smtp {
 
-	/**
-	 * Sending a letter via smtp server
-	 * @param string $to send to
+  /**
+   * Sending a letter via smtp server
+   * @param string $to send to
      * @param array $from from whom
-	 * @param string $title the headline of the message
-	 * @param string $message message
+   * @param string $title the headline of the message
+   * @param string $message message
      * @param string $host smtp host
      * @param int $port smtp port
-	 * @param string $user login from smtp server
-	 * @param string $password password from smtp server
-	 * @param string $file file to send
-	 * @return bool
-	 */
-	public static function send_smtp($to, $from = array("name" => "WebMaster", "email" => "email@email.ru"),
-                                     $title, $message, $host = "127.0.0.1", $port = 25, $user, $password, $file = "") {
-		$mail = new mailer;
-		// For debugging
-		// 0 = off (for production use)
-		// 1 = client messages
-		// 2 = client and server messages
-		$mail->smtp_debug = 0;
-		$mail->debugoutput = "html";
-        // Disable encryption
-        $mail->smtp_secure = "";
-        $mail->smtp_auto_tls = false;
-        // Setting phpmailer
-		$mail->is_smtp();
-		$mail->host = $host;
-		$mail->port = $port;
-		$mail->smtp_auth = true;
-        $mail->username = $user;
-        $mail->password = $password;
-		$mail->set_from($from["email"], $from["name"]);
-		$mail->add_address($to);
-		$mail->subject = $title;
-		$mail->body = $message;
-		if (strlen($file)) $mail->add_attachment($file, "", "binary");
-		return $mail->send();
-	}
+   * @param string $user login from smtp server
+   * @param string $password password from smtp server
+   * @param string $file file to send
+   * @return bool
+   */
+  public static function send_smtp($to, $from = array("name" => "WebMaster", "email" => "email@email.ru"),
+                                   $title, $message, $host = "127.0.0.1", $port = 25, $user, $password, $file = "") {
+    $mail = new mailer;
+    // For debugging
+    // 0 = off (for production use)
+    // 1 = client messages
+    // 2 = client and server messages
+    $mail->smtp_debug = 0;
+    $mail->debugoutput = "html";
+    // Disable encryption
+    $mail->smtp_secure = "";
+    $mail->smtp_auto_tls = false;
+    // Setting phpmailer
+    $mail->is_smtp();
+    $mail->host = $host;
+    $mail->port = $port;
+    $mail->smtp_auth = true;
+    $mail->username = $user;
+    $mail->password = $password;
+    $mail->set_from($from["email"], $from["name"]);
+    $mail->add_address($to);
+    $mail->subject = $title;
+    $mail->body = $message;
+    if (strlen($file)) $mail->add_attachment($file, "", "binary");
+    return $mail->send();
+  }
 
 }
 

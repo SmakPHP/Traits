@@ -159,7 +159,7 @@ class get_page {
    * @throws \Exception
    */
   public function get($link, $post = array(), $referer = "", $cookie = "auto",
-                      $cleaning = 8, $start = -1, $length = 2000000) {
+                      $cleaning = 8, $start = -1, $length = 20000000) {
     // Parsing source link
     $parse = parse_url($link);
     // Initialization
