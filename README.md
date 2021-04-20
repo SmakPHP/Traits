@@ -24,5 +24,5 @@
 Больше примеров в example.php
 
 Программирование на заказ:  
-Телефон: +79773904520, cкайп: SmakPHP  
-Телеграмм: https://t.me/AndreyMt
+WhatsApp: +79773904520, skype: SmakPHP  
+Telegram: https://t.me/AndreyMt
