@@ -134,8 +134,8 @@ class get_page {
     $this->redirect = intval($redirect);
     $this->timeout = intval($timeout);
     $this->all = ($all) ? true : false;
-    $this->agent = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ".
-      "Chrome/62.0.3202.62 Safari/537.36";
+    $this->agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ".
+      "Chrome/85.0.4183.102 Safari/537.36";
     // Setting output directory
     self::$path = is_dir($path) ? realpath($path) : null;
     // Debug mode

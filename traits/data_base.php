@@ -68,43 +68,32 @@ class data_base extends \mysqli {
 
   /**
    * Database request
-     * @param string $sql
-     * @param bool $multi
-     * @param array $ignore
-     * @return \stdClass
-     */
-  public function query($sql, $multi = true, $ignore = array(1062)) {
+   * @param string $sql
+   * @param array $ignore
+   * @return array
+   */
+  public function query($sql, $ignore = array(1062)) {
     $before = $this->get_time();
     $query = parent::query($sql);
     $this->time_query += ($time_query = $this->get_time() - $before);
-    $this->query_num++;
+    $this->query_num++; $result = array();
     if (!$this->errno) {
-      $time_taken = 0; $result = new \stdClass();
+      $time_taken = 0;
       if ($query instanceof \mysqli_result) {
         $before = $this->get_time();
-        $data = array();
-        while ($row = $query->fetch_assoc()) {
-          $data[] = $row;
-          if (!$multi) break;
-        }
-        $result->num_rows = $query->num_rows;
-        $result->row = isset($data[0]) ? $data[0] : array();
-        $result->rows = $data;
+        while ($row = $query->fetch_assoc()) $result[] = $row;
         $query->free_result();
         $this->time_taken += ($time_taken = $this->get_time() - $before);
-      } else {
-        $result->num_rows = 0;
-        $result->row = $result->rows = array();
       }
       $this->query_list[] = array(
         "query" => $sql,
         "time_query" => $time_query,
         "time_taken" =>  $time_taken
       );
-      return $result;
     } else if (!in_array($this->errno, $ignore)) {
-        $this->show_error($this->error, $this->errno, $sql);
-        }
+      $this->show_error($this->error, $this->errno, $sql);
+    }
+    return $result;
   }
 
   /**
