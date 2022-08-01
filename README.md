@@ -23,6 +23,5 @@
     
 Больше примеров в example.php
 
-Программирование на заказ:  
 WhatsApp: +79773904520, skype: SmakPHP  
-Telegram: https://t.me/AndreyMt
+Telegram: https://t.me/AndreyMt2
